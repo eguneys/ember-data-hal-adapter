@@ -10,8 +10,24 @@ exports["default"] = DS.RESTSerializer.extend({
   },
   
   extractSingle: function(store, primaryType, payload, recordId, requestType) {
+    var primaryTypeName;
+
+    if (this.keyForAttribute) {
+      primaryTypeName = this.keyForAttribute(primaryType.typeKey);
+    } else {
+      primaryTypeName = primaryType.typeKey;
+    }
+
     var newPayload = {};
-    newPayload[primaryType.typeKey] = payload;
+    newPayload[primaryTypeName] = {};
+    
+    for (var key in payload) {
+      if (key === '_embedded') {
+        newPayload[key] = payload[key];
+      } else {
+        newPayload[primaryTypeName][key] = payload[key];
+      }
+    }
 
     return this._super(store, primaryType, newPayload, recordId, requestType);
   },
@@ -20,7 +36,11 @@ exports["default"] = DS.RESTSerializer.extend({
   normalizePayload: function(payload) {
     if (payload._embedded) {
       for (var key in payload._embedded) {
-        payload[key] = payload._embedded[key];
+        if (!Ember.isArray(payload._embedded[key])) {
+          payload[key] = [payload._embedded[key]];
+        } else {
+          payload[key] = payload._embedded[key];
+        }
       }
       delete payload._embedded;
     }
@@ -28,7 +48,7 @@ exports["default"] = DS.RESTSerializer.extend({
     if (payload._links) {
       delete payload._links;
     }
-    
+
     return payload;
   },
   

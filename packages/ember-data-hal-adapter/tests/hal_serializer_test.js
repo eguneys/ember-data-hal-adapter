@@ -164,3 +164,173 @@ test("extractArray", function() {
     "villains": ["1","2"]
   }]);
 });
+
+
+test("looking up a belongsTo association", function() {
+  env.container.register('adapter:evilMinion', HAL.Adapter);
+
+  var json_hash = {
+    _links: {
+      self: {
+        href: '/evilMinions/1'
+      },
+      super_villain: {
+        href: '/superVillains/2'
+      }
+    },
+    name: 'Tom'
+  };
+
+  var json = env.dtSerializer.extractSingle(env.store, EvilMinion, json_hash);
+
+  deepEqual(json, {
+    id: "1",
+    name: 'Tom',
+    superVillain: '2'
+  });
+});
+
+test("extractSingle with embedded objects belongsTo", function() {
+  env.container.register('adapter:evilMinion', HAL.Adapter);
+
+  var json_hash = {
+    _links: {
+      self: {
+        href: '/evilMinions/1'
+      },
+      super_villain: {
+        href: '/superVillains/2'
+      }
+    },
+    name: 'Tom',
+    _embedded: {
+      super_villain: {
+        _links: {
+          self: {
+            href: '/superVillains/2'
+          }
+        },
+        firstName: 'SuperTom',
+        lastName: 'SuperDale'
+      }
+    }
+  };
+
+
+  var json = env.dtSerializer.extractSingle(env.store, EvilMinion, json_hash);
+  
+  deepEqual(json, {
+    id: "1",
+    name: "Tom",
+    superVillain: "2"
+  });
+
+  env.store.find("superVillain", 2).then(async(function(villain) {
+    equal(villain.get('firstName'), "SuperTom");
+  }));  
+
+});
+
+
+test("extractSingle with embedded objects hasMany", function() {
+  env.container.register('adapter:homePlanet', HAL.Adapter);
+
+  SuperVillain.reopen({
+    evilMinions: DS.hasMany("evilMinion", { async: true })
+  });
+
+  var json_hash = {
+    _links: {
+      self: {
+        href: '/homePlanets/1'
+      },
+      super_villain: {
+        href: '/superVillains/2'
+      }
+    },
+    name: 'Umber',
+    _embedded: {
+      super_villains: [{
+        _links: {
+          self: {
+            href: '/superVillains/1'
+          },
+          home_planet: {
+            "href": "/homePlanets/123"
+          },
+          evil_minions: {
+            "href": "/superVillains/1/evilMinions"
+          }
+        },
+        first_name: "Tom", 
+        last_name: "Dale"
+      }]
+    }
+  };
+
+  var json = env.dtSerializer.extractSingle(env.store, HomePlanet, json_hash);
+  
+  deepEqual(json, {
+    id: "1",
+    name: "Umber",
+    superVillain: "2"
+  });
+
+  env.store.find("superVillain", 1).then(function(minion) {
+    equal(minion.get('firstName'), "Tom");
+  });
+});
+
+test("extractArray with embedded objects", function() {
+  env.container.register('adapter:superVillain', HAL.Adapter);
+  
+  var json_hash = {
+    _links: {
+      self: {
+        href: "/homePlanets"
+      }
+    },
+    _embedded: {
+      home_planets: [
+        {
+          _links: {
+            self: {
+              href: "/homePlanets/1"
+            }
+          },
+          name: 'Umber',
+          villains: [
+            { href: "/superVillains/1" },
+            { href: "/superVillains/2" }
+          ],
+          _embedded: {
+            super_villains: [{
+              _links: {
+                self: {
+                  href: "/superVillains/1"
+                },
+                home_planet: {
+                  href: "/homePlanets/1"
+                }
+              },
+              first_name: "Tom",
+              last_name: "Dale"
+            }]
+          }
+        }
+      ]
+    }
+  };
+
+  var array = env.dtSerializer.extractArray(env.store, HomePlanet, json_hash);
+
+  deepEqual(array, [{
+    "id": "1",
+    "name": "Umber",
+    "villains": ["1","2"]
+  }]);
+
+  env.store.find('superVillain', 1).then(async(function(minion) {
+    equal(minion.get('firstName'), 'Tom');
+  }));
+});

@@ -7,9 +7,9 @@ define(
     __exports__["default"] = DS.RESTAdapter.extend({
       defaultSerializer: HALSerializer,
 
-      find: function(store, type, id) {
-        return this.ajax(id, 'GET');
-      },
+      // find: function(store, type, id) {
+      //   return this.ajax(id, 'GET');
+      // },
 
       updateRecord: function(store, type, record) {
         var data = {};
