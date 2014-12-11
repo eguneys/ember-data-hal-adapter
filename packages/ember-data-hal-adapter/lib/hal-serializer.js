@@ -104,7 +104,9 @@ export default DS.RESTSerializer.extend({
         } else if (relationship.kind === 'hasMany') {
           resourceUri = hash[key];
           if (typeof resourceUri === "string") {
-            hash[key] = resourceUri;
+            hash.links = hash.links || {};
+            hash.links[key] = resourceUri;
+            delete hash[key];
           } else  {
             var ids = [];
             hash[key].forEach(function (resourceUri) {

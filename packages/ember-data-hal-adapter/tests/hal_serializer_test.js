@@ -101,7 +101,9 @@ test("normalize", function() {
     firstName: "Tom",
     lastName: "Dale",
     homePlanet: "123",
-    evilMinions: "/superVillains/1/evilMinions"
+    links: {
+      evilMinions: "/superVillains/1/evilMinions"
+    }
   });
 });
 
@@ -125,7 +127,9 @@ test("extractSingle", function() {
   deepEqual(json, {
     "id": "1",
     "name": "Umber",
-    "villains": "/homePlanet/1/superVillains"
+    links: {
+      "villains": "/homePlanet/1/superVillains"
+    }
   });
 });
 
@@ -244,8 +248,8 @@ test("extractSingle with embedded objects hasMany", function() {
       self: {
         href: '/homePlanets/1'
       },
-      super_villain: {
-        href: '/superVillains/2'
+      villains: {
+        href: '/homePlanets/1/superVillains'
       }
     },
     name: 'Umber',
@@ -273,7 +277,9 @@ test("extractSingle with embedded objects hasMany", function() {
   deepEqual(json, {
     id: "1",
     name: "Umber",
-    superVillain: "2"
+    links: {
+      villains: '/homePlanets/1/superVillains'
+    }
   });
 
   env.store.find("superVillain", 1).then(function(minion) {
@@ -302,23 +308,21 @@ test("extractArray with embedded objects", function() {
           villains: [
             { href: "/superVillains/1" },
             { href: "/superVillains/2" }
-          ],
-          _embedded: {
-            super_villains: [{
-              _links: {
-                self: {
-                  href: "/superVillains/1"
-                },
-                home_planet: {
-                  href: "/homePlanets/1"
-                }
-              },
-              first_name: "Tom",
-              last_name: "Dale"
-            }]
-          }
+          ]
         }
-      ]
+      ],
+      super_villains: [{
+        _links: {
+          self: {
+            href: "/superVillains/1"
+          },
+          home_planet: {
+            href: "/homePlanets/1"
+          }
+        },
+        first_name: "Tom",
+        last_name: "Dale"
+      }]
     }
   };
 

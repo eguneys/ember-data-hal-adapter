@@ -31,8 +31,7 @@ exports["default"] = DS.RESTSerializer.extend({
 
     return this._super(store, primaryType, newPayload, recordId, requestType);
   },
-
-
+  
   normalizePayload: function(payload) {
     if (payload._embedded) {
       for (var key in payload._embedded) {
@@ -106,7 +105,9 @@ exports["default"] = DS.RESTSerializer.extend({
         } else if (relationship.kind === 'hasMany') {
           resourceUri = hash[key];
           if (typeof resourceUri === "string") {
-            hash[key] = resourceUri;
+            hash.links = hash.links || {};
+            hash.links[key] = resourceUri;
+            delete hash[key];
           } else  {
             var ids = [];
             hash[key].forEach(function (resourceUri) {

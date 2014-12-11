@@ -104,3 +104,17 @@ test("can create record", function() {
 
     equal(get(record, 'name'), 'bar', 'property was set on the record');
 });
+
+
+test("async hasMany backed by a link always returns a promise", function() {
+  Post.reopen({ 
+    comments: DS.hasMany('comment', { async: true })
+  });
+
+  store.push('post', { id: 1, text: "Some text", links: { comments: 'post/1/comments' } });
+
+  store.find('post', 1).then(async(function(post) {
+    equal(post.get('text'), "Some text");
+    ok(post.get('comments') instanceof DS.PromiseArray, "comments is a promise");
+  }));
+});
